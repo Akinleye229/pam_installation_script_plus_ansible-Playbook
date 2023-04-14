@@ -1,0 +1,34 @@
+---
+- name: Install Centrify packages and join to domain
+  hosts: all
+  become: true
+
+  vars:
+    domain_name: "example.com"
+    unix_zone: "Unix-zone"
+    domain_admin_user: "domain_admin"
+    domain_admin_password: "password"
+
+  tasks:
+    - name: Install Centrify packages
+      yum:
+        name:
+          - CentrifyDC-openssl-5.9.1-329-rhel6.x86-64.rpm
+          - CentrifyDC-curl-5.9.1-329-rhel6.x86_64.rpm
+          - CentrifyDC-openldap-5.9.1-329-rhel6.x86_64.rpm
+          - CentrifyDC-5.9.1-329-rhel6.x86_64.rpm
+          - CentrifyDC-Idapproxy-5.9.1-329-rhel6.x86_64.rpm
+        state: present
+
+    - name: Join server to domain
+      command: adjoin {{ domain_name }} -z {{ unix_zone }} -u {{ domain_admin_user }} -p {{ domain_admin_password }}
+      register: adjoin_output
+
+    - name: Print adjoin output
+      debug:
+        var: adjoin_output.stdout_lines
+
+
+    #to run the playbook
+        #ansible-playbook centrify.yml -i inventory.ini -u remote_user -k
+

@@ -1,0 +1,36 @@
+---
+- name: Join servers to domain
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Install Centrify repo
+    get_url:
+      url: "https://cloudrepo.centrify.com/WWpAEkSLEAprpAxI/rpm-redhat/cfg/setup/bash.rpm.sh"
+      dest: "/tmp/bash.rpm.sh"
+      mode: "0755"
+    register: repo_install
+
+  - name: Run Centrify repo install script
+    shell: "/tmp/bash.rpm.sh"
+    when: repo_install.changed
+
+  - name: Install CentrifyDC package
+    yum:
+      name: centrifyDC
+      state: latest
+
+  - name: Join server to domain
+    shell: "adjoin -s nameofdomin"
+    register: join_domain
+    changed_when: join_domain.stdout.find('joined to') != -1
+
+  - name: Check joining status
+    shell: "adinfo"
+    when: join_domain.changed
+
+
+
+    #to run the playbook
+    #ansible-playbook -i inventory.ini join_domain.yml -u ansible --private-key=my_key.pem
+
